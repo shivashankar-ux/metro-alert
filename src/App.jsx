@@ -88,14 +88,23 @@ export default function App() {
     setDemoPanelOpen(true);
   }
 
-  function handleSimulatedPosition(position) {
+  function handleSimulatedPosition(position, demoStart, demoEnd) {
     setDemoPosition(position);
+    if (demoStart && demoEnd) {
+      if (!journey.isActive || journey.journey?.boardingStation?.id !== demoStart.id || journey.journey?.destinationStation?.id !== demoEnd.id) {
+        journey.start(demoStart, demoEnd);
+      }
+    }
+    if (position) {
+      journey.reportPosition(position);
+    }
   }
 
   function handleExitDemo() {
     setDemoMode(false);
     setDemoPanelOpen(false);
     setDemoPosition(null);
+    journey.reset();
   }
 
   // ---- Render -----------------------------------------------------

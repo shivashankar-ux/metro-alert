@@ -27,15 +27,43 @@ export default function DemoModePanel({ onClose, onSimulatedPosition, onExitDemo
   const progressRef = useRef(progress);
   progressRef.current = progress;
 
-  function emitPosition(p) {
+  function emitPosition(p, forceTriple = false) {
     if (!start || !end) return;
     const lat = start.latitude + (end.latitude - start.latitude) * p;
     const lon = start.longitude + (end.longitude - start.longitude) * p;
-    onSimulatedPosition({
-      coords: { latitude: lat, longitude: lon, accuracy: Number(simulatedAccuracy) },
-      timestamp: Date.now()
-    });
+    const acc = Number(simulatedAccuracy);
+    const now = Date.now();
+
+    if (forceTriple || p >= 0.95 || p === 0.85) {
+      // Emit 3 consecutive fixes with small timestamp increments so
+      // journeyEngine's REQUIRED_CONSECUTIVE_READINGS check passes.
+      for (let i = 0; i < 3; i++) {
+        onSimulatedPosition(
+          {
+            coords: { latitude: lat, longitude: lon, accuracy: acc },
+            timestamp: now + i * 200
+          },
+          start,
+          end
+        );
+      }
+    } else {
+      onSimulatedPosition(
+        {
+          coords: { latitude: lat, longitude: lon, accuracy: acc },
+          timestamp: now
+        },
+        start,
+        end
+      );
+    }
   }
+
+  // Auto-emit starting position when demo opens or stations change
+  useEffect(() => {
+    emitPosition(progress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startId, endId]);
 
   function handleSlider(value) {
     setProgress(value);
@@ -44,17 +72,25 @@ export default function DemoModePanel({ onClose, onSimulatedPosition, onExitDemo
 
   function jumpTo(target) {
     setProgress(target);
-    emitPosition(target);
+    emitPosition(target, true);
+    if (target === 1) {
+      setTimeout(() => {
+        onClose();
+      }, 400);
+    }
   }
 
   // Auto-play: nudges progress forward on an interval while `playing` is on.
   useEffect(() => {
     if (!playing) return undefined;
     const id = setInterval(() => {
-      const next = Math.min(1, progressRef.current + 0.02);
+      const next = Math.min(1, progressRef.current + 0.05);
       handleSlider(next);
-      if (next >= 1) setPlaying(false);
-    }, 300);
+      if (next >= 1) {
+        setPlaying(false);
+        setTimeout(() => onClose(), 400);
+      }
+    }, 400);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, start?.id, end?.id, simulatedAccuracy]);
