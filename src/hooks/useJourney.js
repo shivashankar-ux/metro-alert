@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import {
   startJourney,
   updateJourneyLocation,
   stopJourney,
   JourneyStatus
 } from '../services/journeyEngine.js';
-import { showArrivalNotification } from '../services/notifications.js';
+import {
+  showArrivalNotification,
+  showApproachingNotification
+} from '../services/notifications.js';
 
 function reducer(state, action) {
   switch (action.type) {
@@ -24,11 +27,11 @@ function reducer(state, action) {
 
 /**
  * Manage the active journey: start, live position updates, approaching /
- * arrival detection, and stop/reset. Fires the arrival notification exactly
- * once when the journey transitions into ARRIVED.
+ * arrival detection, and stop/reset.
  */
 export function useJourney() {
   const [journey, dispatch] = useReducer(reducer, null);
+  const prevStatusRef = useRef(null);
 
   const start = useCallback((boardingStation, destinationStation) => {
     dispatch({ type: 'START', boardingStation, destinationStation });
@@ -41,13 +44,21 @@ export function useJourney() {
   const stop = useCallback(() => dispatch({ type: 'STOP' }), []);
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  // Fire the notification exactly once, right when arrival is confirmed.
+  // Fire notifications and vibrations on status transitions
   useEffect(() => {
-    if (journey?.status === JourneyStatus.ARRIVED) {
-      showArrivalNotification(journey.destinationStation.name);
+    const currentStatus = journey?.status;
+    const prevStatus = prevStatusRef.current;
+
+    if (currentStatus && currentStatus !== prevStatus) {
+      if (currentStatus === JourneyStatus.APPROACHING) {
+        showApproachingNotification(journey.destinationStation.name);
+      } else if (currentStatus === JourneyStatus.ARRIVED) {
+        showArrivalNotification(journey.destinationStation.name);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [journey?.status]);
+
+    prevStatusRef.current = currentStatus;
+  }, [journey?.status, journey?.destinationStation?.name]);
 
   return {
     journey,

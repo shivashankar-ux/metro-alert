@@ -19,7 +19,7 @@ import ArrivalAlert from './components/ArrivalAlert.jsx';
 import NotificationPermission from './components/NotificationPermission.jsx';
 import GPSStatus from './components/GPSStatus.jsx';
 import DemoModePanel from './components/DemoModePanel.jsx';
-import ErrorScreen from './components/ErrorScreen.jsx';
+import ScreenFlasher from './components/ScreenFlasher.jsx';
 
 export default function App() {
   const [locationRequested, setLocationRequested] = useState(false);
@@ -30,10 +30,21 @@ export default function App() {
   const [pickingBoardingManually, setPickingBoardingManually] = useState(false);
   const [selectedDestinationId, setSelectedDestinationId] = useState(null);
   const [notificationPermission, setNotificationPermission] = useState(getNotificationPermission());
+  const [flasherMode, setFlasherMode] = useState(null);
 
   const geo = useGeolocation({ demoPosition: demoMode ? demoPosition : null });
   const stations = useStations();
   const journey = useJourney();
+
+  // Trigger 3-second screen flash when status changes to APPROACHING or ARRIVED
+  useEffect(() => {
+    const status = journey.journey?.status;
+    if (status === JourneyStatus.APPROACHING) {
+      setFlasherMode('approaching');
+    } else if (status === JourneyStatus.ARRIVED) {
+      setFlasherMode('arrival');
+    }
+  }, [journey.journey?.status]);
 
   // ---- Boarding station: auto-detected, or manual fallback -------------
   const detection = useMemo(() => {
@@ -257,6 +268,10 @@ export default function App() {
           destinationStation={journey.journey.destinationStation}
           onStartNew={handleStartNewJourney}
         />
+      )}
+
+      {flasherMode && (
+        <ScreenFlasher mode={flasherMode} onComplete={() => setFlasherMode(null)} />
       )}
 
       {demoPanelOpen && (
