@@ -5,7 +5,10 @@ import { useJourney } from './hooks/useJourney.js';
 import { detectBoardingStation, getStationById } from './services/stationDetection.js';
 import {
   getNotificationPermission,
-  requestNotificationPermission
+  requestNotificationPermission,
+  primeAudioContext,
+  requestScreenWakeLock,
+  releaseScreenWakeLock
 } from './services/notifications.js';
 import { JourneyStatus } from './services/journeyEngine.js';
 
@@ -74,6 +77,8 @@ export default function App() {
 
   async function handleStartJourney() {
     if (!boardingStation || !destinationStation) return;
+    primeAudioContext();
+    requestScreenWakeLock();
     if (notificationPermission === 'default') {
       const result = await requestNotificationPermission();
       setNotificationPermission(result);
@@ -85,11 +90,13 @@ export default function App() {
   function handleStopJourney() {
     journey.stop();
     geo.stopWatching();
+    releaseScreenWakeLock();
   }
 
   function handleStartNewJourney() {
     journey.reset();
     geo.stopWatching();
+    releaseScreenWakeLock();
     setSelectedDestinationId(null);
     stations.setQuery('');
   }
@@ -97,6 +104,8 @@ export default function App() {
   function handleOpenDemo() {
     setDemoMode(true);
     setDemoPanelOpen(true);
+    primeAudioContext();
+    requestScreenWakeLock();
   }
 
   function handleSimulatedPosition(position, demoStart, demoEnd) {
