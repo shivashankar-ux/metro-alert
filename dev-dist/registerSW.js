@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/metro-alert/dev-sw.js?dev-sw', { scope: '/metro-alert/', type: 'classic' })

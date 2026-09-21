@@ -8,7 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const REPO_NAME = 'metro-alert';
 
 export default defineConfig({
-  base: `/${REPO_NAME}/`,
+  base: './',
   plugins: [
     react(),
     VitePWA({
