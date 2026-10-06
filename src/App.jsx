@@ -16,6 +16,7 @@ import LocationPermission from './components/LocationPermission.jsx';
 import CurrentStation from './components/CurrentStation.jsx';
 import StationSearch from './components/StationSearch.jsx';
 import JourneyCard from './components/JourneyCard.jsx';
+import TransitNavigationCard from './components/TransitNavigationCard.jsx';
 import JourneyProgress from './components/JourneyProgress.jsx';
 import DistanceDisplay from './components/DistanceDisplay.jsx';
 import ArrivalAlert from './components/ArrivalAlert.jsx';
@@ -38,6 +39,37 @@ export default function App() {
   const geo = useGeolocation({ demoPosition: demoMode ? demoPosition : null });
   const stations = useStations();
   const journey = useJourney();
+
+  // Auto-resume GPS watching and Wake Lock when an active journey exists (e.g. restored from localStorage)
+  useEffect(() => {
+    if (journey.isActive && !demoMode) {
+      if (!geo.isWatching) {
+        geo.startWatching();
+      }
+      requestScreenWakeLock();
+    }
+  }, [journey.isActive, demoMode, geo]);
+
+  // Re-acquire Wake Lock, resume AudioContext, and pull fresh GPS coordinates when returning from background
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        primeAudioContext();
+        if (journey.isActive && !demoMode) {
+          requestScreenWakeLock();
+          geo.requestOnce({ maximumAge: 0, timeout: 10000 });
+          if (!geo.isWatching) {
+            geo.startWatching();
+          }
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [journey.isActive, demoMode, geo]);
 
   // Trigger 3-second screen flash when status changes to APPROACHING or ARRIVED
   useEffect(() => {
@@ -132,7 +164,7 @@ export default function App() {
     return <ErrorScreen kind="unsupported" />;
   }
 
-  if (!locationRequested && !demoMode) {
+  if (!locationRequested && !demoMode && !journey.isActive) {
     return (
       <Shell onOpenDemo={handleOpenDemo}>
         <LocationPermission status={geo.status} onAllow={handleAllowLocation} />
@@ -147,7 +179,7 @@ export default function App() {
     );
   }
 
-  if (!demoMode && (geo.status === 'denied' || geo.status === 'unavailable' || geo.status === 'timeout')) {
+  if (!demoMode && !journey.isActive && (geo.status === 'denied' || geo.status === 'unavailable' || geo.status === 'timeout')) {
     const kindMap = { denied: 'location-denied', unavailable: 'location-unavailable', timeout: 'location-timeout' };
     return (
       <Shell onOpenDemo={handleOpenDemo}>
@@ -242,33 +274,21 @@ export default function App() {
           </button>
 
           <div className="flex justify-center">
-            <GPSStatus accuracy={geo.position?.coords?.accuracy} isWatching={geo.isWatching} demoMode={demoMode} />
+            <GPSStatus accuracy={geo.position?.coords?.accuracy} isWatching={geo.isWatching} demoMode={demoMode} status={geo.status} />
           </div>
         </div>
       )}
 
       {inJourney && journey.journey && (
-        <div className="max-w-md mx-auto px-5 py-6 space-y-6">
-          <JourneyCard
-            boardingStation={journey.journey.boardingStation}
-            destinationStation={journey.journey.destinationStation}
+        <div className="py-2">
+          <TransitNavigationCard
+            journey={journey.journey}
+            onStop={handleStopJourney}
+            geoStatus={geo.status}
+            accuracy={geo.position?.coords?.accuracy}
+            isWatching={geo.isWatching}
+            demoMode={demoMode}
           />
-
-          {journey.journey.status === JourneyStatus.APPROACHING && (
-            <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3 text-center">
-              <p className="font-medium text-amber-700 dark:text-amber-300">
-                You're approaching {journey.journey.destinationStation.name}.
-              </p>
-            </div>
-          )}
-
-          <DistanceDisplay distanceMeters={journey.journey.distanceToDestinationMeters} />
-
-          <JourneyProgress status={journey.journey.status} onStop={handleStopJourney} />
-
-          <div className="flex justify-center">
-            <GPSStatus accuracy={geo.position?.coords?.accuracy} isWatching={geo.isWatching} demoMode={demoMode} />
-          </div>
         </div>
       )}
 

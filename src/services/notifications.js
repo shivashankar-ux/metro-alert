@@ -51,17 +51,28 @@ export function primeAudioContext() {
 export async function requestScreenWakeLock() {
   if (typeof window !== 'undefined' && 'wakeLock' in navigator) {
     try {
+      if (wakeLockSentinel && !wakeLockSentinel.released) {
+        return wakeLockSentinel;
+      }
       wakeLockSentinel = await navigator.wakeLock.request('screen');
+      wakeLockSentinel.addEventListener('release', () => {
+        wakeLockSentinel = null;
+      });
+      return wakeLockSentinel;
     } catch {
-      // Ignore wake lock rejection
+      // Wake lock request rejected (e.g. low battery mode or background tab)
+      return null;
     }
   }
+  return null;
 }
 
 export function releaseScreenWakeLock() {
   if (wakeLockSentinel) {
     try {
-      wakeLockSentinel.release();
+      if (!wakeLockSentinel.released) {
+        wakeLockSentinel.release();
+      }
     } catch {}
     wakeLockSentinel = null;
   }
