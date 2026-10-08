@@ -201,77 +201,126 @@ export default function App() {
   return (
     <Shell onOpenDemo={handleOpenDemo} demoMode={demoMode}>
       {!inJourney && (
-        <div className="max-w-md mx-auto px-5 py-6 space-y-5">
-          <header className="space-y-1">
-            <h1 className="text-2xl font-bold">Where are you going?</h1>
+        <div className="max-w-md mx-auto px-4 sm:px-5 py-6 space-y-5">
+          {/* Header Banner */}
+          <header className="space-y-1 text-left">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+                Hyderabad Metro Alert PWA
+              </span>
+            </div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">
+              Where are you traveling today?
+            </h1>
+            <p className="text-xs text-gray-400">
+              Auto-detects your station & alerts you before your destination, even when your phone is locked.
+            </p>
           </header>
 
-          <CurrentStation
-            station={boardingStation}
-            distanceMeters={boardingDistance}
-            loading={geo.status === 'requesting' && !geo.position}
-            notFound={!boardingStation && geo.position != null}
-            onManualSelect={() => setPickingBoardingManually(true)}
-          />
-
-          {pickingBoardingManually && (
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-gray-400">
-                Select boarding station manually
-              </p>
-              <StationSearch
-                query={stations.query}
-                setQuery={stations.setQuery}
-                results={stations.results}
-                boardingStationId={null}
-                autoFocus
-                onSelect={(s) => {
-                  setManualBoardingId(s.id);
-                  setPickingBoardingManually(false);
-                  stations.setQuery('');
-                }}
-              />
+          {/* Current / Boarding Station Selection */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                📍 Boarding Station
+              </span>
+              <button
+                onClick={() => setPickingBoardingManually((prev) => !prev)}
+                className="text-xs text-blue-400 hover:underline"
+              >
+                {pickingBoardingManually ? 'Use GPS detection' : 'Change station'}
+              </button>
             </div>
-          )}
 
-          <StationSearch
-            query={stations.query}
-            setQuery={stations.setQuery}
-            results={stations.results}
-            boardingStationId={boardingStation?.id}
-            onSelect={(s) => {
-              setSelectedDestinationId(s.id);
-              stations.setQuery('');
-            }}
-          />
+            <CurrentStation
+              station={boardingStation}
+              distanceMeters={boardingDistance}
+              loading={geo.status === 'requesting' && !geo.position}
+              notFound={!boardingStation && geo.position != null}
+              onManualSelect={() => setPickingBoardingManually(true)}
+            />
 
+            {pickingBoardingManually && (
+              <div className="space-y-2 pt-1">
+                <p className="text-xs text-gray-400">Search and tap your boarding station:</p>
+                <StationSearch
+                  query={stations.query}
+                  setQuery={stations.setQuery}
+                  results={stations.results}
+                  boardingStationId={null}
+                  autoFocus
+                  onSelect={(s) => {
+                    setManualBoardingId(s.id);
+                    setPickingBoardingManually(false);
+                    stations.setQuery('');
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Destination Station Search */}
+          <div className="space-y-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              🏁 Destination Station
+            </span>
+
+            <StationSearch
+              query={stations.query}
+              setQuery={stations.setQuery}
+              results={stations.results}
+              boardingStationId={boardingStation?.id}
+              onSelect={(s) => {
+                setSelectedDestinationId(s.id);
+                stations.setQuery('');
+              }}
+            />
+          </div>
+
+          {/* Selected Destination Preview Card */}
           {destinationStation && (
-            <div className="rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 px-4 py-3 flex items-center justify-between">
+            <div className="rounded-2xl bg-gradient-to-r from-blue-950/80 to-indigo-950/80 border border-blue-800/80 p-4 shadow-xl flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-500 dark:text-blue-400">Destination</p>
-                <p className="font-semibold text-blue-800 dark:text-blue-200">{destinationStation.name}</p>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded">
+                  Destination Ready
+                </span>
+                <p className="text-lg font-extrabold text-white mt-1">{destinationStation.name}</p>
+                <p className="text-xs text-gray-300">
+                  {destinationStation.line} • {destinationStation.interchange?.length > 0 ? `Interchange: ${destinationStation.interchange.join(', ')}` : 'Direct Line'}
+                </p>
               </div>
               <button
                 onClick={() => setSelectedDestinationId(null)}
-                className="text-xs text-blue-500 dark:text-blue-400 underline"
+                className="text-xs text-gray-400 hover:text-white px-2 py-1 bg-black/40 rounded-lg border border-gray-800"
               >
                 Change
               </button>
             </div>
           )}
 
+          {/* Notification Permission Card */}
           <NotificationPermission
             permission={notificationPermission}
             onRequest={async () => setNotificationPermission(await requestNotificationPermission())}
           />
 
+          {/* Start Journey Button */}
           <button
             disabled={!boardingStation || !destinationStation}
             onClick={handleStartJourney}
-            className="w-full py-3.5 rounded-2xl bg-blue-600 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-white font-medium text-base active:scale-[0.98] transition"
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white font-bold text-base active:scale-[0.98] transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
           >
-            Start Journey
+            <span>🚇</span>
+            <span>Start Metro Journey</span>
           </button>
+
+          {/* Background Alarm Instructions */}
+          <div className="p-3.5 bg-gray-900/60 border border-gray-800 rounded-2xl space-y-1 text-xs text-gray-400">
+            <p className="font-semibold text-gray-200 flex items-center gap-1.5">
+              <span>📱</span> PWA Background Support
+            </p>
+            <p>Once you start your journey, you can minimize the app or lock your screen. The PWA keeps GPS active & rings alarm audio + 5-sec vibration on arrival.</p>
+          </div>
 
           <div className="flex justify-center">
             <GPSStatus accuracy={geo.position?.coords?.accuracy} isWatching={geo.isWatching} demoMode={demoMode} status={geo.status} />
