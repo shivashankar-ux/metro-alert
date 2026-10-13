@@ -201,128 +201,134 @@ export default function App() {
   return (
     <Shell onOpenDemo={handleOpenDemo} demoMode={demoMode}>
       {!inJourney && (
-        <div className="max-w-md mx-auto px-4 sm:px-5 py-6 space-y-5">
-          {/* Header Banner */}
-          <header className="space-y-1 text-left">
+        <div className="max-w-md mx-auto px-4 pt-safe pb-6 space-y-4">
+
+          {/* ── Top header ── */}
+          <header className="anim-slide-up pt-4 space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
-                Hyderabad Metro Alert PWA
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                Hyderabad Metro
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Where are you traveling today?
+            <h1 className="text-2xl font-black text-white tracking-tight leading-tight">
+              Plan your journey
             </h1>
-            <p className="text-xs text-gray-400">
-              Auto-detects your station & alerts you before your destination, even when your phone is locked.
-            </p>
           </header>
 
-          {/* Current / Boarding Station Selection */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                📍 Boarding Station
-              </span>
-              <button
-                onClick={() => setPickingBoardingManually((prev) => !prev)}
-                className="text-xs text-blue-400 hover:underline"
-              >
-                {pickingBoardingManually ? 'Use GPS detection' : 'Change station'}
-              </button>
+          {/* ── Route builder card ── */}
+          <div className="anim-slide-up anim-delay-1 card p-4 space-y-3">
+
+            {/* Boarding row */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">From</span>
+                <button
+                  onClick={() => setPickingBoardingManually((prev) => !prev)}
+                  className="text-[11px] font-semibold text-indigo-400"
+                >
+                  {pickingBoardingManually ? '← Use GPS' : 'Change'}
+                </button>
+              </div>
+              <CurrentStation
+                station={boardingStation}
+                distanceMeters={boardingDistance}
+                loading={geo.status === 'requesting' && !geo.position}
+                notFound={!boardingStation && geo.position != null}
+                onManualSelect={() => setPickingBoardingManually(true)}
+              />
+              {pickingBoardingManually && (
+                <div className="pt-1">
+                  <StationSearch
+                    query={stations.query}
+                    setQuery={stations.setQuery}
+                    results={stations.results}
+                    boardingStationId={null}
+                    autoFocus
+                    placeholder="Search boarding station…"
+                    onSelect={(s) => {
+                      setManualBoardingId(s.id);
+                      setPickingBoardingManually(false);
+                      stations.setQuery('');
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
-            <CurrentStation
-              station={boardingStation}
-              distanceMeters={boardingDistance}
-              loading={geo.status === 'requesting' && !geo.position}
-              notFound={!boardingStation && geo.position != null}
-              onManualSelect={() => setPickingBoardingManually(true)}
-            />
+            {/* Divider with arrow */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/5" />
+              <div className="w-7 h-7 rounded-full bg-zinc-800 border border-white/8 flex items-center justify-center text-sm">↕</div>
+              <div className="flex-1 h-px bg-white/5" />
+            </div>
 
-            {pickingBoardingManually && (
-              <div className="space-y-2 pt-1">
-                <p className="text-xs text-gray-400">Search and tap your boarding station:</p>
+            {/* Destination row */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">To</span>
+              {destinationStation ? (
+                <div className="card flex items-center gap-3 px-4 py-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg">🏁</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Destination set</p>
+                    <p className="text-base font-bold text-white truncate mt-0.5">{destinationStation.name}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5">{destinationStation.line}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedDestinationId(null)}
+                    className="w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 text-xs flex-shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
                 <StationSearch
                   query={stations.query}
                   setQuery={stations.setQuery}
                   results={stations.results}
-                  boardingStationId={null}
-                  autoFocus
+                  boardingStationId={boardingStation?.id}
+                  placeholder="Where are you going?"
                   onSelect={(s) => {
-                    setManualBoardingId(s.id);
-                    setPickingBoardingManually(false);
+                    setSelectedDestinationId(s.id);
                     stations.setQuery('');
                   }}
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Destination Station Search */}
-          <div className="space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              🏁 Destination Station
-            </span>
-
-            <StationSearch
-              query={stations.query}
-              setQuery={stations.setQuery}
-              results={stations.results}
-              boardingStationId={boardingStation?.id}
-              onSelect={(s) => {
-                setSelectedDestinationId(s.id);
-                stations.setQuery('');
-              }}
+          {/* ── Notification ── */}
+          <div className="anim-slide-up anim-delay-2">
+            <NotificationPermission
+              permission={notificationPermission}
+              onRequest={async () => setNotificationPermission(await requestNotificationPermission())}
             />
           </div>
 
-          {/* Selected Destination Preview Card */}
-          {destinationStation && (
-            <div className="rounded-2xl bg-gradient-to-r from-blue-950/80 to-indigo-950/80 border border-blue-800/80 p-4 shadow-xl flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded">
-                  Destination Ready
-                </span>
-                <p className="text-lg font-extrabold text-white mt-1">{destinationStation.name}</p>
-                <p className="text-xs text-gray-300">
-                  {destinationStation.line} • {destinationStation.interchange?.length > 0 ? `Interchange: ${destinationStation.interchange.join(', ')}` : 'Direct Line'}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedDestinationId(null)}
-                className="text-xs text-gray-400 hover:text-white px-2 py-1 bg-black/40 rounded-lg border border-gray-800"
-              >
-                Change
-              </button>
-            </div>
-          )}
-
-          {/* Notification Permission Card */}
-          <NotificationPermission
-            permission={notificationPermission}
-            onRequest={async () => setNotificationPermission(await requestNotificationPermission())}
-          />
-
-          {/* Start Journey Button */}
-          <button
-            disabled={!boardingStation || !destinationStation}
-            onClick={handleStartJourney}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:from-gray-800 disabled:to-gray-800 disabled:text-gray-500 text-white font-bold text-base active:scale-[0.98] transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2"
-          >
-            <span>🚇</span>
-            <span>Start Metro Journey</span>
-          </button>
-
-          {/* Background Alarm Instructions */}
-          <div className="p-3.5 bg-gray-900/60 border border-gray-800 rounded-2xl space-y-1 text-xs text-gray-400">
-            <p className="font-semibold text-gray-200 flex items-center gap-1.5">
-              <span>📱</span> PWA Background Support
-            </p>
-            <p>Once you start your journey, you can minimize the app or lock your screen. The PWA keeps GPS active & rings alarm audio + 5-sec vibration on arrival.</p>
+          {/* ── Start button ── */}
+          <div className="anim-slide-up anim-delay-3">
+            <button
+              disabled={!boardingStation || !destinationStation}
+              onClick={handleStartJourney}
+              className="btn-primary"
+            >
+              <span>🚇</span>
+              <span>Start Journey</span>
+            </button>
           </div>
 
-          <div className="flex justify-center">
+          {/* ── Info strip ── */}
+          <div className="anim-slide-up anim-delay-4 card px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0 text-sm">📱</div>
+            <p className="text-xs text-zinc-500 leading-snug">
+              Lock your screen after starting — alarm still fires at 500 m and 200 m from destination.
+            </p>
+          </div>
+
+          {/* ── GPS status ── */}
+          <div className="flex justify-center pb-1">
             <GPSStatus accuracy={geo.position?.coords?.accuracy} isWatching={geo.isWatching} demoMode={demoMode} status={geo.status} />
           </div>
         </div>
@@ -365,21 +371,17 @@ export default function App() {
 
 function Shell({ children, onOpenDemo, demoMode }) {
   return (
-    <div className="min-h-dvh flex flex-col relative bg-[#030712] safe-top">
-      {/* Ambient background glows */}
-      <div className="fixed top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none z-0" />
-      <div className="fixed bottom-0 left-0 right-0 h-[200px] bg-gradient-to-t from-indigo-950/10 to-transparent pointer-events-none z-0" />
+    <div className="min-h-dvh flex flex-col bg-[#09090b]">
+      <div className="flex-1">{children}</div>
 
-      <div className="flex-1 relative z-10">{children}</div>
-
-      <footer className="relative z-10 px-5 py-3 safe-bottom text-center border-t border-white/5">
+      <footer className="pb-safe px-5 py-2 text-center">
         <button
           onClick={onOpenDemo}
-          className={`text-[11px] font-medium underline underline-offset-2 transition ${
-            demoMode ? 'text-amber-400' : 'text-gray-600 hover:text-gray-400'
+          className={`text-[11px] font-medium transition ${
+            demoMode ? 'text-amber-400' : 'text-zinc-700 hover:text-zinc-500'
           }`}
         >
-          {demoMode ? '🧪 Demo mode active — tap to open panel' : 'Demo Mode'}
+          {demoMode ? '🧪 Demo active' : 'Demo Mode'}
         </button>
       </footer>
     </div>

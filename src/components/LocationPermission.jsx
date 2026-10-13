@@ -1,80 +1,89 @@
+/* Premium splash screen */
 export default function LocationPermission({ status, onAllow }) {
   const isDenied = status === 'denied';
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-dvh px-6 py-10 text-center overflow-hidden">
+    <div className="relative flex flex-col min-h-dvh bg-[#09090b] overflow-hidden">
 
-      {/* Background glow orbs */}
-      <div className="absolute top-[-80px] left-1/2 -translate-x-1/2 w-[340px] h-[340px] bg-blue-600/20 rounded-full blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-[-60px] right-[-40px] w-[240px] h-[240px] bg-indigo-600/15 rounded-full blur-[70px] pointer-events-none" />
+      {/* Top glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] bg-indigo-600/15 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Metro icon badge */}
-      <div className="animate-float-up relative mb-8">
-        <div className="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-2xl shadow-blue-600/40 animate-glow-pulse">
-          <span className="text-5xl">🚇</span>
+      {/* Content */}
+      <div className="flex-1 flex flex-col justify-end px-5 pb-10 pt-safe">
+
+        {/* Big icon area */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 pb-6">
+
+          {/* Metro icon — fintech card style */}
+          <div className="anim-slide-up">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-2xl"
+                style={{ boxShadow: '0 20px 60px rgba(99,102,241,0.4)' }}>
+                <span className="text-5xl">🚇</span>
+              </div>
+              {/* Live badge */}
+              <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full px-2 py-0.5 flex items-center gap-1 border-2 border-[#09090b]">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-dot-blink" />
+                <span className="text-[10px] font-bold text-white">LIVE</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tag */}
+          <div className="anim-slide-up anim-delay-1 flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-3 py-1">
+            <span className="text-xs font-semibold text-indigo-400 tracking-widest uppercase">Hyderabad Metro</span>
+          </div>
+
+          {/* Headline */}
+          <div className="anim-slide-up anim-delay-1 text-center space-y-3 px-2">
+            <h1 className="text-[2rem] font-black text-white tracking-tight leading-[1.15]">
+              Never miss<br />your stop.
+            </h1>
+            <p className="text-[15px] text-zinc-400 leading-relaxed max-w-[280px] mx-auto">
+              Auto-detects your station. Rings an alarm the moment you arrive — even when your screen is locked.
+            </p>
+          </div>
+
+          {/* Feature rows — fintech card style */}
+          <div className="anim-slide-up anim-delay-2 w-full max-w-sm space-y-2.5">
+            {[
+              { icon: '📍', title: 'Auto station detection', sub: 'GPS-based, no manual input needed' },
+              { icon: '🔔', title: 'Alarm on arrival', sub: 'Sound + vibration at 500m & 200m' },
+              { icon: '🔒', title: 'Works with screen off', sub: 'PWA background keeps GPS active' },
+            ].map(({ icon, title, sub }) => (
+              <div key={title} className="card flex items-center gap-3.5 px-4 py-3.5">
+                <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center text-lg flex-shrink-0">
+                  {icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{title}</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        {/* Live ping dot */}
-        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 border-2 border-gray-950" />
-        </span>
-      </div>
 
-      {/* Headline */}
-      <div className="animate-float-up space-y-3 mb-8" style={{ animationDelay: '80ms' }}>
-        <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-1 mb-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-          <span className="text-xs font-semibold text-blue-400 tracking-wider uppercase">Hyderabad Metro Alert</span>
+        {/* Error */}
+        {isDenied && (
+          <div className="anim-fade-in mb-4 card border-rose-500/30 bg-rose-500/5 px-4 py-3 flex gap-3 items-start">
+            <span className="text-rose-400 mt-0.5">⚠️</span>
+            <p className="text-sm text-rose-400 leading-snug">
+              Location was blocked. Go to your browser settings → enable location for this site → tap below.
+            </p>
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="anim-slide-up anim-delay-3 space-y-3">
+          <button onClick={onAllow} className="btn-primary">
+            <span>📍</span>
+            <span>{isDenied ? 'Retry Location Access' : 'Allow Location & Continue'}</span>
+          </button>
+          <p className="text-center text-xs text-zinc-600">
+            Your location never leaves your device
+          </p>
         </div>
-
-        <h1 className="text-3xl font-black text-white tracking-tight leading-tight">
-          Never miss your<br />
-          <span className="shimmer-text">station again.</span>
-        </h1>
-
-        <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto">
-          Metro Alert auto-detects your boarding station and vibrates + rings an alarm when you're approaching your destination — even when your phone is locked.
-        </p>
-      </div>
-
-      {/* Feature pills */}
-      <div className="animate-float-up flex flex-wrap justify-center gap-2 mb-8" style={{ animationDelay: '160ms' }}>
-        {[
-          { icon: '📍', label: 'Auto-detects station' },
-          { icon: '🔔', label: 'Alarm on arrival' },
-          { icon: '🔒', label: 'Works when locked' },
-          { icon: '🛡️', label: 'Data stays on device' },
-        ].map(({ icon, label }) => (
-          <span
-            key={label}
-            className="flex items-center gap-1.5 text-xs font-medium text-gray-300 bg-white/5 border border-white/10 rounded-full px-3 py-1.5"
-          >
-            <span>{icon}</span>
-            <span>{label}</span>
-          </span>
-        ))}
-      </div>
-
-      {/* Error state */}
-      {isDenied && (
-        <div className="animate-float-up w-full max-w-xs mb-4 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-sm text-rose-400 text-left flex items-start gap-2">
-          <span className="text-base mt-0.5">⚠️</span>
-          <span>Location was denied. Go to your browser settings, enable location for this site, then tap below.</span>
-        </div>
-      )}
-
-      {/* CTA button */}
-      <div className="animate-float-up w-full max-w-xs" style={{ animationDelay: '240ms' }}>
-        <button
-          onClick={onAllow}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-[0.97] transition-all duration-200 text-white font-bold text-base shadow-2xl shadow-blue-600/40 flex items-center justify-center gap-2 animate-gradient"
-        >
-          <span>📍</span>
-          <span>{isDenied ? 'Retry Location Access' : 'Enable Location & Start'}</span>
-        </button>
-        <p className="mt-3 text-xs text-gray-600 text-center">
-          Your location is never uploaded to any server.
-        </p>
       </div>
     </div>
   );

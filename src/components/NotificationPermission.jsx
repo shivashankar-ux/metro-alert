@@ -3,18 +3,28 @@ export default function NotificationPermission({ permission, onRequest }) {
 
   if (permission === 'denied') {
     return (
-      <p className="text-xs text-center text-amber-600 dark:text-amber-400">
-        Notifications are disabled. Keep the app open to see the arrival alert.
-      </p>
+      <div className="card border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-center gap-3">
+        <span className="text-amber-400 text-base">🔕</span>
+        <p className="text-xs text-amber-400 leading-snug">
+          Notifications blocked. Keep the app open to see arrival alerts.
+        </p>
+      </div>
     );
   }
 
   return (
     <button
       onClick={onRequest}
-      className="w-full text-sm py-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium"
+      className="w-full card card-pressed px-4 py-3.5 flex items-center gap-3 text-left"
     >
-      Enable arrival notifications
+      <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
+        <span className="text-base">🔔</span>
+      </div>
+      <div className="flex-1">
+        <p className="text-sm font-semibold text-white">Enable notifications</p>
+        <p className="text-xs text-zinc-500 mt-0.5">Get alerted even when app is in background</p>
+      </div>
+      <span className="text-xs font-bold text-indigo-400 flex-shrink-0">Enable →</span>
     </button>
   );
 }
