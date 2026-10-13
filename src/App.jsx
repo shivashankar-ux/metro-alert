@@ -365,14 +365,21 @@ export default function App() {
 
 function Shell({ children, onOpenDemo, demoMode }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1">{children}</div>
-      <footer className="px-5 py-4 text-center">
+    <div className="min-h-dvh flex flex-col relative bg-[#030712] safe-top">
+      {/* Ambient background glows */}
+      <div className="fixed top-0 left-0 right-0 h-[300px] bg-gradient-to-b from-blue-900/10 to-transparent pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-0 right-0 h-[200px] bg-gradient-to-t from-indigo-950/10 to-transparent pointer-events-none z-0" />
+
+      <div className="flex-1 relative z-10">{children}</div>
+
+      <footer className="relative z-10 px-5 py-3 safe-bottom text-center border-t border-white/5">
         <button
           onClick={onOpenDemo}
-          className="text-[11px] text-gray-300 dark:text-gray-700 underline underline-offset-2"
+          className={`text-[11px] font-medium underline underline-offset-2 transition ${
+            demoMode ? 'text-amber-400' : 'text-gray-600 hover:text-gray-400'
+          }`}
         >
-          {demoMode ? 'Demo mode active — open panel' : 'Demo Mode'}
+          {demoMode ? '🧪 Demo mode active — tap to open panel' : 'Demo Mode'}
         </button>
       </footer>
     </div>
